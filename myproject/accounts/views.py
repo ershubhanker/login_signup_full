@@ -28,6 +28,11 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode
+from django.contrib.auth.decorators import login_required
+
+@login_required(login_url='login')
+def home_page(request):
+    return render(request,'accounts/home.html')
 
 
 UserModel = get_user_model()
@@ -113,7 +118,9 @@ def signup_view(request):
             uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             current_site = get_current_site(request)
-            protocol = 'http' if request.is_secure() else 'https'  # Adjust protocol based on request
+
+            protocol = 'https' if request.is_secure() else 'http'  # Adjust protocol based on request
+            # protocol = 'http' if request.is_secure() else 'https'  # Adjust protocol based on request
             domain = current_site.domain
             verify_url = reverse('verify_email_confirm', kwargs={'uidb64': uidb64, 'token': token})
             verification_link = f"{protocol}://{domain}{verify_url}"
@@ -268,8 +275,9 @@ def login_view(request):
             password = form.cleaned_data.get('password')
             user = authenticate(username=username, password=password)
             if user is not None:
+                context = {'username':username}
                 login(request, user)
-                return redirect('home')
+                return render(request,'accounts/home.html',context=context)
     else:
         form = LoginForm()
     return render(request, 'accounts/login.html', {'form': form})

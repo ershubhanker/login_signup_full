@@ -21,7 +21,7 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 # from django.contrib.auth import views 
 from accounts import views
-
+from accounts.views import home_page
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
@@ -30,5 +30,6 @@ urlpatterns = [
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('reset_password_complete/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('verify_email/', views.verify_email_request, name='verify_email_request'),
-    path('verify_email/<uidb64>/<token>/', views.verify_email_confirm, name='verify_email_confirm')
+    path('verify_email/<uidb64>/<token>/', views.verify_email_confirm, name='verify_email_confirm'),
+    path('',home_page,name='home')
 ]
