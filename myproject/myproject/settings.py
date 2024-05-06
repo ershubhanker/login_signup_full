@@ -96,7 +96,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'aseemguptajaipur@gmail.com'
-EMAIL_HOST_PASSWORD = 'gbwxmlqbtuvzydsn'
+EMAIL_HOST_PASSWORD = 'bmyddwimxblhlpoa'
 DEFAULT_FROM_EMAIL = 'aseemguptajaipur@gmail.com'
 
 

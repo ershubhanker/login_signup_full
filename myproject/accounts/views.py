@@ -18,7 +18,21 @@ from django.urls import reverse
 
 @login_required(login_url='login')
 def home_page(request):
-    return render(request,'accounts/home.html')
+    user_type = request.user.user_type
+    if user_type == 'employee':
+        # Logic for employee user type
+        pass
+    elif user_type == 'hr':
+        # Logic for HR user type
+        pass
+    elif user_type == 'custom_admin':
+        # Logic for custom admin user type
+        pass
+    else:
+        # Handle unknown user types
+        pass
+    context = {"message":f'you are {user_type} user type you will be having following access'}
+    return render(request,'accounts/home.html',context=context)
 
 
 UserModel = get_user_model()
@@ -53,6 +67,10 @@ def signup_view(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.is_active = False  # User is inactive until email is verified
+            user.save()
+
+            user_type = form.cleaned_data.get('user_type')
+            user.user_type = user_type
             user.save()
 
             # Send verification email
@@ -91,21 +109,39 @@ def verify_email_confirm(request, uidb64, token):
     else:
         return render(request, 'accounts/verification_error.html')
 
-
+# accounts/views.py
 def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request, request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                context = {'username':username}
+            user_type = form.cleaned_data.get('user_type')  # Get user type from form
+
+            # Authenticate user based on username, password, and user type
+            user = authenticate(request, username=username, password=password)
+            if user is not None and user.user_type == user_type:
                 login(request, user)
-                return render(request,'accounts/home.html',context=context)
+                return redirect('home')
     else:
         form = LoginForm()
     return render(request, 'accounts/login.html', {'form': form})
+
+
+# def login_view(request):
+#     if request.method == 'POST':
+#         form = LoginForm(request, request.POST)
+#         if form.is_valid():
+#             username = form.cleaned_data.get('username')
+#             password = form.cleaned_data.get('password')
+#             user = authenticate(username=username, password=password)
+#             if user is not None:
+#                 context = {'username':username}
+#                 login(request, user)
+#                 return render(request,'accounts/home.html',context=context)
+#     else:
+#         form = LoginForm()
+#     return render(request, 'accounts/login.html', {'form': form})
 
 def forgot_password_view(request):
     if request.method == 'POST':
