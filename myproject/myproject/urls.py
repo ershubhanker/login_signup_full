@@ -22,14 +22,23 @@ from django.contrib.auth import views as auth_views
 # from django.contrib.auth import views 
 from accounts import views
 from accounts.views import home_page
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+from accounts.views import CustomPasswordResetView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
-    path('reset_password/', auth_views.PasswordResetView.as_view(), name='password_reset'),
-    path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    path('reset_password_complete/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
+    # path('reset_password/', auth_views.PasswordResetView.as_view(), name='password_reset'),
+    # path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
+    # path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    # path('reset_password_complete/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('verify_email/', views.verify_email_request, name='verify_email_request'),
     path('verify_email/<uidb64>/<token>/', views.verify_email_confirm, name='verify_email_confirm'),
-    path('',home_page,name='home')
+    path('',home_page,name='home'),
+
+    path('password_reset/', CustomPasswordResetView.as_view(), name='password_reset'),
+    path('password_reset/done/', PasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('reset/done/', PasswordResetCompleteView.as_view(), name='password_reset_complete'),
+
+
 ]

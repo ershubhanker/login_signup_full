@@ -40,5 +40,21 @@ class LoginForm(AuthenticationForm):
 
 
 
+# class ForgotPasswordForm(PasswordResetForm):
+#     email = forms.EmailField(max_length=254)
+
+#     # class Meta:
+#     #     model = CustomUser
+#     #     fields = ('email')
+
+
 class ForgotPasswordForm(PasswordResetForm):
     email = forms.EmailField(max_length=254)
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if not CustomUser.objects.filter(email=email).exists():
+            raise forms.ValidationError("This email address is not associated with any account.")
+        return email
+
+        

@@ -15,23 +15,24 @@ from django.contrib.auth.decorators import login_required
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.urls import reverse
+from .models import CustomUser 
 
 @login_required(login_url='login')
 def home_page(request):
-    user_type = request.user.user_type
-    if user_type == 'employee':
-        # Logic for employee user type
-        pass
-    elif user_type == 'hr':
-        # Logic for HR user type
-        pass
-    elif user_type == 'custom_admin':
-        # Logic for custom admin user type
-        pass
-    else:
-        # Handle unknown user types
-        pass
-    context = {"message":f'you are {user_type} user type you will be having following access'}
+    # user_type = request.user.user_type
+    # if user_type == 'employee':
+    #     # Logic for employee user type
+    #     pass
+    # elif user_type == 'hr':
+    #     # Logic for HR user type
+    #     pass
+    # elif user_type == 'custom_admin':
+    #     # Logic for custom admin user type
+    #     pass
+    # else:
+    #     # Handle unknown user types
+    #     pass
+    context = {"message":f'you are {user_type} user type you will be having following access in home page'}
     return render(request,'accounts/home.html',context=context)
 
 
@@ -45,6 +46,7 @@ def verify_email_request(request):
             user = UserModel.objects.get(email=email)
             uidb64 = urlsafe_base64_encode(user.pk.to_bytes(4, 'big')).decode()
             token = default_token_generator.make_token(user)
+            print(f"while verify mail request the token is {token}")
             current_site = request.get_host()
             mail_subject = 'Verify your email address'
             message = render_to_string('accounts/email_verification_email.html', {
@@ -76,6 +78,7 @@ def signup_view(request):
             # Send verification email
             uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
+            print(f"while signup the token is {token}")
             current_site = get_current_site(request)
 
             protocol = 'https' if request.is_secure() else 'http'  # Adjust protocol based on request
@@ -98,34 +101,131 @@ def signup_view(request):
 def verify_email_confirm(request, uidb64, token):
     try:
         uid = urlsafe_base64_decode(uidb64).decode()
-        user = User.objects.get(pk=uid)
+        user = CustomUser.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
-
+    print(token,user)
     if user is not None and default_token_generator.check_token(user, token):
         user.is_active = True
         user.save()
         return render(request, 'accounts/verification_success.html')
     else:
+        print(f'(user is not none {user is not None} )',f'tokens matched {default_token_generator.check_token(user, token)}')
         return render(request, 'accounts/verification_error.html')
 
-# accounts/views.py
+# # accounts/views.py
+# def login_view(request):
+#     if request.method == 'POST':
+#         form = LoginForm(request, request.POST)
+#         if form.is_valid():
+#             username = form.cleaned_data.get('username')
+#             password = form.cleaned_data.get('password')
+#             user_type = form.cleaned_data.get('user_type')  # Get user type from form
+
+#             # Authenticate user based on username, password, and user type
+#             user = authenticate(request, username=username, password=password)
+#             if user is not None and user.user_type == user_type:
+#                 login(request, user)
+#                 return redirect('home')
+#     else:
+#         form = LoginForm()
+#     return render(request, 'accounts/login.html', {'form': form})
+
+from django.contrib.auth import authenticate, login
+from .forms import LoginForm
+
 def login_view(request):
     if request.method == 'POST':
-        form = LoginForm(request, request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user_type = form.cleaned_data.get('user_type')  # Get user type from form
+        form = LoginForm(request.POST)
+        print(request.POST)
+        print("\n\nlogin me hu\n\n", )
+        print("\n\nye line chali\n\n")
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user_type = request.POST.get('user_type')  # Get user type from form
+        print(f"\n\n login view me print kiya hai {username} {password} {user_type}\n\n")
+        # Authenticate user based on username, password, and user type
+        user = authenticate(request, username=username, password=password, user_type=user_type)
+        print(user, f'user is not None {user is not None}')
+        if user is not None:
+            print("\n\nredirecting to login\n\n")
+            context = {"message":f'you are user {username} with  {user_type} user type you will be having following access'}
 
-            # Authenticate user based on username, password, and user type
-            user = authenticate(request, username=username, password=password)
-            if user is not None and user.user_type == user_type:
-                login(request, user)
-                return redirect('home')
+            login(request, user)
+            print("\n\ngoing to home\n\n")
+            # return render(request,'accounts/home.html',context=context)
+            return redirect('home')
     else:
+        print("\n\ninvalid\n\n")
         form = LoginForm()
     return render(request, 'accounts/login.html', {'form': form})
+
+
+# def login_view(request):
+#     if request.method == 'POST':
+#         form = LoginForm(request.POST)
+#         print("\n\nlogin me hu\n\n", form.is_valid())
+#         if form.is_valid():
+#             print("\n\nye line chali\n\n")
+#             username = form.cleaned_data.get('username')
+#             password = form.cleaned_data.get('password')
+#             user_type = form.cleaned_data.get('user_type')  # Get user type from form
+#             print(f"\n\n{username} {password} {user_type}\n\n")
+#             # Authenticate user based on username, password, and user type
+#             user = authenticate(request, username=username, password=password, user_type=user_type)
+#             print(user, f'user is not None {user is not None}')
+#             if user is not None:
+#                 login(request, user)
+#                 return redirect('home')
+#         else:
+#             print("Form Errors:", form.errors)  # Print form errors
+#     else:
+#         print("\n\ninvalid\n\n")
+#         form = LoginForm()
+#     return render(request, 'accounts/login.html', {'form': form})
+
+# def login_view(request):
+#     if request.method == 'POST':
+#         form = LoginForm(request, request.POST)
+#         print("\n\nlogin me hu\n\n", form.is_valid())
+#         if form.is_valid():
+#             print("\n\nform is valid\n\n")
+#             username = form.cleaned_data.get('username')
+#             password = form.cleaned_data.get('password')
+#             user_type = form.cleaned_data.get('user_type')  # Get user type from form
+#             print(f"\n\n{username} {password} {user_type}\n\n")
+#             # Authenticate user based on username, password, and user type
+#             user = authenticate(request, username=username, password=password, user_type=user_type)
+#             print(user, f'user is not None {user is not None}')
+#             if user is not None:
+#                 login(request, user)
+#                 return redirect('home')
+#     else:
+#         print("\n\ninvalid\n\n")
+#         form = LoginForm()
+#     return render(request, 'accounts/login.html', {'form': form})
+
+# def login_view(request):
+#     if request.method == 'POST':
+#         form = LoginForm(request.POST)
+#         print("\n\nlogin me hu\n\n",form.is_valid())
+#         if form.is_valid():
+#             print("\n\nye line chali\n\n")
+#             username = form.cleaned_data.get('username')
+#             password = form.cleaned_data.get('password')
+#             user_type = form.cleaned_data.get('user_type')  # Get user type from form
+#             print(f"\n\n{username} {password} {user_type}\n\n")
+#             # Authenticate user based on username, password, and user type
+#             user = authenticate(request, username=username, password=password, user_type=user_type)
+#             print(user,f'user is not None {user is not None}')
+#             if user is not None:
+#                 login(request, user)
+#                 return redirect('home')
+#     else:
+#         print("\n\ninvalid\n\n")
+#         form = LoginForm()
+#     return render(request, 'accounts/login.html', {'form': form})
+
 
 
 # def login_view(request):
@@ -146,12 +246,66 @@ def login_view(request):
 def forgot_password_view(request):
     if request.method == 'POST':
         form = ForgotPasswordForm(request.POST)
+        print(f'form.is_valid() value is {form.is_valid()}')
         if form.is_valid():
-            # here we can also add another logic for password reset
+            email = form.cleaned_data.get('email')
+            user = CustomUser.objects.get(email = email)
+            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            print(f"while signup the token is {token}")
+            current_site = get_current_site(request)
+
+            protocol = 'https' if request.is_secure() else 'http'  # Adjust protocol based on request
+            # protocol = 'http' if request.is_secure() else 'https'  # Adjust protocol based on request
+            domain = current_site.domain
+            verify_url = reverse('verify_email_confirm', kwargs={'uidb64': uidb64, 'token': token})
+            verification_link = f"{protocol}://{domain}{verify_url}"
+            mail_subject = 'Activate your account'
+            message = render_to_string('accounts/email_verification_email.html', {
+                'user': user,
+                'verification_link': verification_link,
+            })
+            send_mail(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
             pass
     else:
         form = ForgotPasswordForm()
     return render(request, 'accounts/forgot_password.html', {'form': form})
+
+from django.contrib.auth.views import PasswordResetView
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'accounts/password_reset_form.html'  # Customize template if needed
+    email_template_name = 'accounts/password_reset_email.html'  # Customize email template if needed
+    success_url = '/password_reset/done/'  # Customize success URL if needed
+
+    def form_valid(self, form):
+        # Your form validation logic here
+        # Get the user object and other necessary data
+        user = form.get_user()
+        protocol = 'http' if self.request.is_secure() else 'https'
+        domain = self.request.get_host()
+        site_name = 'YourSiteName'  # Replace with your site name
+        
+
+        # Pass the necessary data to the template context
+        context = {
+            'user': user,
+            'protocol': protocol,
+            'domain': domain,
+            'site_name': site_name,
+        }
+
+        # Pass the context to the email template renderer
+        self.send_mail(
+            self.email_template_name,
+            context,
+            **{
+                'email': user.email,
+                'subject': 'Password Reset',  # Customize email subject if needed
+            }
+        )
+
+        return super().form_valid(form)
 
 def logout_view(request):
     logout(request)

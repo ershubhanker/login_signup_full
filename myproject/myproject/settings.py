@@ -100,6 +100,12 @@ EMAIL_HOST_PASSWORD = 'bmyddwimxblhlpoa'
 DEFAULT_FROM_EMAIL = 'aseemguptajaipur@gmail.com'
 
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'accounts.backends.CustomUserBackend',  # Your custom authentication backend
+    # Add any other authentication backends here if needed
+]
+
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
