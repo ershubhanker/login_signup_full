@@ -96,15 +96,22 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'aseemguptajaipur@gmail.com'
-EMAIL_HOST_PASSWORD = 'bmyddwimxblhlpoa'
+EMAIL_HOST_PASSWORD = 'godscmtcwcjkhqik'
 DEFAULT_FROM_EMAIL = 'aseemguptajaipur@gmail.com'
 
+AUTH_USER_MODEL = 'accounts.CustomUser'
+# AUTHENTICATION_BACKENDS = [
+#     'django.contrib.auth.backends.ModelBackend',  # Default backend
+#     'accounts.backends.CustomUserBackend',  # Your custom authentication backend
+#     # Add any other authentication backends here if needed
+# ]
 
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Default backend
-    'accounts.backends.CustomUserBackend',  # Your custom authentication backend
-    # Add any other authentication backends here if needed
-]
+# AUTHENTICATION_BACKENDS = [
+    
+#     'accounts.backends.CustomUserBackend',
+#     'django.contrib.auth.backends.ModelBackend',  
+#     # Add any other authentication backends here if needed
+# ]
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

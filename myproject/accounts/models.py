@@ -1,5 +1,6 @@
 # Create your models here.
 # accounts/models.py
+from typing import Any
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -45,7 +46,11 @@ class CustomUser(AbstractUser):
     )
 
     def __str__(self):
-        return self.username
+        return self.username 
+    
+    def __getattribute__(self, name: str) -> Any:
+        return super().__getattribute__(name)
+    
 
 
 

@@ -19,20 +19,26 @@ from .models import CustomUser
 
 @login_required(login_url='login')
 def home_page(request):
-    # user_type = request.user.user_type
-    # if user_type == 'employee':
-    #     # Logic for employee user type
+    user_type = request.user.user_type
+    user_name = request.user
+    if user_type == 'employee':
+        print("ye emplouyee hai is isme jaane ike paermssion nahi hai")
+        # Logic for employee user type
     #     pass
-    # elif user_type == 'hr':
+    elif user_type == 'hr':
+        print("tum hr hop yaha aa skati ho par tum admin ke neech ho")
     #     # Logic for HR user type
     #     pass
-    # elif user_type == 'custom_admin':
-    #     # Logic for custom admin user type
+    elif user_type == 'custom_admin':
+        print("tu admin hai full access")
+        # Logic for custom admin user type
     #     pass
-    # else:
+    else:
+        print("redirectinh to other page")
     #     # Handle unknown user types
     #     pass
-    context = {"message":f'you are {user_type} user type you will be having following access in home page'}
+    # context = {"message":f'you are {user_type} user type you will be having following access in home page'}
+    context = {'message':f'you are user {user_name} of user_type {user_type}'}
     return render(request,'accounts/home.html',context=context)
 
 
@@ -133,26 +139,28 @@ def verify_email_confirm(request, uidb64, token):
 
 from django.contrib.auth import authenticate, login
 from .forms import LoginForm
+from .backends import CustomUserBackend
 
 def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
-        print(request.POST)
-        print("\n\nlogin me hu\n\n", )
-        print("\n\nye line chali\n\n")
+        # print(request.POST)
+        print("\nlogin me hu\n", )
+        # print("\nye line chali\n")
         username = request.POST.get('username')
         password = request.POST.get('password')
         user_type = request.POST.get('user_type')  # Get user type from form
-        print(f"\n\n login view me print kiya hai {username} {password} {user_type}\n\n")
+        print(f"\nlogin view me print kiya hai {username} {password} {user_type}\n")
         # Authenticate user based on username, password, and user type
-        user = authenticate(request, username=username, password=password, user_type=user_type)
-        print(user, f'user is not None {user is not None}')
+        # user = CustomUserBackend().authenticate(request, username=username, password=password, user_type=user_type)
+        user = CustomUserBackend().authenticate(request, username=username, password=password, user_type=user_type)
+        print(user, f'user is None {user is None}')
         if user is not None:
-            print("\n\nredirecting to login\n\n")
+            print("\nredirecting to login\n")
             context = {"message":f'you are user {username} with  {user_type} user type you will be having following access'}
-
+            # print(context['message'])
             login(request, user)
-            print("\n\ngoing to home\n\n")
+            print("\ngoing to home\n")
             # return render(request,'accounts/home.html',context=context)
             return redirect('home')
     else:
