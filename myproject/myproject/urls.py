@@ -22,8 +22,8 @@ from django.contrib.auth import views as auth_views
 # from django.contrib.auth import views 
 from accounts import views
 from accounts.views import home_page
-from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
-from accounts.views import CustomPasswordResetView
+# from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+# from accounts.views import CustomPasswordResetView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),

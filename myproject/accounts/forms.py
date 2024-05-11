@@ -4,20 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
-from django.contrib.auth.models import User
-
-# class SignupForm(UserCreationForm):
-#     email = forms.EmailField(max_length=200, help_text='Required')
-
-#     class Meta:
-#         model = User
-#         fields = ('username', 'email', 'password1', 'password2')
-
-
-# class LoginForm(AuthenticationForm):
-#     class Meta:
-#         model = User
-#         fields = ('username', 'password')
+# from django.contrib.auth.models import User
 
 
 
@@ -37,15 +24,6 @@ class LoginForm(AuthenticationForm):
     class Meta:
         model = CustomUser
         fields = ('username', 'password', 'user_type')
-
-
-
-# class ForgotPasswordForm(PasswordResetForm):
-#     email = forms.EmailField(max_length=254)
-
-#     # class Meta:
-#     #     model = CustomUser
-#     #     fields = ('email')
 
 
 class ForgotPasswordForm(PasswordResetForm):

@@ -119,23 +119,6 @@ def verify_email_confirm(request, uidb64, token):
         print(f'(user is not none {user is not None} )',f'tokens matched {default_token_generator.check_token(user, token)}')
         return render(request, 'accounts/verification_error.html')
 
-# # accounts/views.py
-# def login_view(request):
-#     if request.method == 'POST':
-#         form = LoginForm(request, request.POST)
-#         if form.is_valid():
-#             username = form.cleaned_data.get('username')
-#             password = form.cleaned_data.get('password')
-#             user_type = form.cleaned_data.get('user_type')  # Get user type from form
-
-#             # Authenticate user based on username, password, and user type
-#             user = authenticate(request, username=username, password=password)
-#             if user is not None and user.user_type == user_type:
-#                 login(request, user)
-#                 return redirect('home')
-#     else:
-#         form = LoginForm()
-#     return render(request, 'accounts/login.html', {'form': form})
 
 from django.contrib.auth import authenticate, login
 from .forms import LoginForm
@@ -168,88 +151,6 @@ def login_view(request):
         form = LoginForm()
     return render(request, 'accounts/login.html', {'form': form})
 
-
-# def login_view(request):
-#     if request.method == 'POST':
-#         form = LoginForm(request.POST)
-#         print("\n\nlogin me hu\n\n", form.is_valid())
-#         if form.is_valid():
-#             print("\n\nye line chali\n\n")
-#             username = form.cleaned_data.get('username')
-#             password = form.cleaned_data.get('password')
-#             user_type = form.cleaned_data.get('user_type')  # Get user type from form
-#             print(f"\n\n{username} {password} {user_type}\n\n")
-#             # Authenticate user based on username, password, and user type
-#             user = authenticate(request, username=username, password=password, user_type=user_type)
-#             print(user, f'user is not None {user is not None}')
-#             if user is not None:
-#                 login(request, user)
-#                 return redirect('home')
-#         else:
-#             print("Form Errors:", form.errors)  # Print form errors
-#     else:
-#         print("\n\ninvalid\n\n")
-#         form = LoginForm()
-#     return render(request, 'accounts/login.html', {'form': form})
-
-# def login_view(request):
-#     if request.method == 'POST':
-#         form = LoginForm(request, request.POST)
-#         print("\n\nlogin me hu\n\n", form.is_valid())
-#         if form.is_valid():
-#             print("\n\nform is valid\n\n")
-#             username = form.cleaned_data.get('username')
-#             password = form.cleaned_data.get('password')
-#             user_type = form.cleaned_data.get('user_type')  # Get user type from form
-#             print(f"\n\n{username} {password} {user_type}\n\n")
-#             # Authenticate user based on username, password, and user type
-#             user = authenticate(request, username=username, password=password, user_type=user_type)
-#             print(user, f'user is not None {user is not None}')
-#             if user is not None:
-#                 login(request, user)
-#                 return redirect('home')
-#     else:
-#         print("\n\ninvalid\n\n")
-#         form = LoginForm()
-#     return render(request, 'accounts/login.html', {'form': form})
-
-# def login_view(request):
-#     if request.method == 'POST':
-#         form = LoginForm(request.POST)
-#         print("\n\nlogin me hu\n\n",form.is_valid())
-#         if form.is_valid():
-#             print("\n\nye line chali\n\n")
-#             username = form.cleaned_data.get('username')
-#             password = form.cleaned_data.get('password')
-#             user_type = form.cleaned_data.get('user_type')  # Get user type from form
-#             print(f"\n\n{username} {password} {user_type}\n\n")
-#             # Authenticate user based on username, password, and user type
-#             user = authenticate(request, username=username, password=password, user_type=user_type)
-#             print(user,f'user is not None {user is not None}')
-#             if user is not None:
-#                 login(request, user)
-#                 return redirect('home')
-#     else:
-#         print("\n\ninvalid\n\n")
-#         form = LoginForm()
-#     return render(request, 'accounts/login.html', {'form': form})
-
-
-
-# def login_view(request):
-#     if request.method == 'POST':
-#         form = LoginForm(request, request.POST)
-#         if form.is_valid():
-#             username = form.cleaned_data.get('username')
-#             password = form.cleaned_data.get('password')
-#             user = authenticate(username=username, password=password)
-#             if user is not None:
-#                 context = {'username':username}
-#                 login(request, user)
-#                 return render(request,'accounts/home.html',context=context)
-#     else:
-#         form = LoginForm()
-#     return render(request, 'accounts/login.html', {'form': form})
 
 def forgot_password_view(request):
     if request.method == 'POST':
