@@ -202,41 +202,52 @@ def forgot_password_view(request):
         form = ForgotPasswordForm()
     return render(request, 'accounts/forgot_password.html', {'form': form})
 
-from django.contrib.auth.views import PasswordResetView
 
+
+from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
+
+# Forgot Password View
 class CustomPasswordResetView(PasswordResetView):
-    template_name = 'accounts/password_reset_form.html'  # Customize template if needed
-    email_template_name = 'accounts/password_reset_email.html'  # Customize email template if needed
-    success_url = '/password_reset/done/'  # Customize success URL if needed
+    template_name = 'accounts/forgot_password.html'
 
-    def form_valid(self, form):
-        # Your form validation logic here
-        # Get the user object and other necessary data
-        user = form.get_user()
-        protocol = 'http' if self.request.is_secure() else 'https'
-        domain = self.request.get_host()
-        site_name = 'YourSiteName'  # Replace with your site name
+# Reset Password View
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'accounts/reset_password.html'
+
+
+# class CustomPasswordResetView(PasswordResetView):
+#     template_name = 'accounts/password_reset_form.html'  # Customize template if needed
+#     email_template_name = 'accounts/password_reset_email.html'  # Customize email template if needed
+#     success_url = '/password_reset/done/'  # Customize success URL if needed
+
+#     def form_valid(self, form):
+#         # Your form validation logic here
+#         # Get the user object and other necessary data
+#         user = form.get_user()
+#         protocol = 'https' if self.request.is_secure() else 'http'
+#         domain = self.request.get_host()
+#         site_name = 'YourSiteName'  # Replace with your site name
         
 
-        # Pass the necessary data to the template context
-        context = {
-            'user': user,
-            'protocol': protocol,
-            'domain': domain,
-            'site_name': site_name,
-        }
+#         # Pass the necessary data to the template context
+#         context = {
+#             'user': user,
+#             'protocol': protocol,
+#             'domain': domain,
+#             'site_name': site_name,
+#         }
 
-        # Pass the context to the email template renderer
-        self.send_mail(
-            self.email_template_name,
-            context,
-            **{
-                'email': user.email,
-                'subject': 'Password Reset',  # Customize email subject if needed
-            }
-        )
+#         # Pass the context to the email template renderer
+#         self.send_mail(
+#             self.email_template_name,
+#             context,
+#             **{
+#                 'email': user.email,
+#                 'subject': 'Password Reset',  # Customize email subject if needed
+#             }
+#         )
 
-        return super().form_valid(form)
+#         return super().form_valid(form)
 
 def logout_view(request):
     logout(request)
