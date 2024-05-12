@@ -1,9 +1,8 @@
 # # Create your views here.
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-# from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
-from .forms import SignupForm, LoginForm, ForgotPasswordForm
+from .forms import ForgotPasswordForm
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 from django.contrib.sites.shortcuts import get_current_site
@@ -15,10 +14,16 @@ from django.contrib.auth.decorators import login_required
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.urls import reverse
+from .models import Profile
+from django.contrib import messages
 
 @login_required(login_url='login')
 def home_page(request):
-    return render(request,'accounts/home.html')
+    user = User.objects.get(username = request.user)
+    user_type = Profile.objects.get(user=user).user_type
+    context = {'message':f'{request.user} {user_type}'}
+
+    return render(request,'accounts/home.html',context=context)
 
 
 UserModel = get_user_model()
@@ -49,33 +54,58 @@ def verify_email_request(request):
 
 def signup_view(request):
     if request.method == 'POST':
-        form = SignupForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False  # User is inactive until email is verified
-            user.save()
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        user_type = request.POST.get('user_type')
+        print(f'{username} {email} {password1} {password2} {user_type} ')
+        
+        user = User.objects.filter(username=username)
+        
+        if user.exists():
+            messages.error(request, "username already exist.")
+            return redirect('signup')
+        
+        if password1!=password2:
+            messages.error(request, "password dosent matches")
+            return redirect('signup')
+        
+        user = User.objects.create(
+               username=username,
+               email=email
+        )
+        
+        user.set_password(password1)
+        user.is_active = False
+        user.save()
+    
+    
+        # Send verification email
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        print(f"while signup the token is {token}")
+        current_site = get_current_site(request)
 
-            # Send verification email
-            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            current_site = get_current_site(request)
+        protocol = 'https' if request.is_secure() else 'http'  # Adjust protocol based on request
+        # protocol = 'http' if request.is_secure() else 'https'  # Adjust protocol based on request
+        domain = current_site.domain
+        verify_url = reverse('verify_email_confirm', kwargs={'uidb64': uidb64, 'token': token})
+        verification_link = f"{protocol}://{domain}{verify_url}"
+        mail_subject = 'Activate your account'
+        message = render_to_string('accounts/email_verification_email.html', {
+            'user': user,
+            'verification_link': verification_link,
+        })
 
-            protocol = 'https' if request.is_secure() else 'http'  # Adjust protocol based on request
-            # protocol = 'http' if request.is_secure() else 'https'  # Adjust protocol based on request
-            domain = current_site.domain
-            verify_url = reverse('verify_email_confirm', kwargs={'uidb64': uidb64, 'token': token})
-            verification_link = f"{protocol}://{domain}{verify_url}"
-            mail_subject = 'Activate your account'
-            message = render_to_string('accounts/email_verification_email.html', {
-                'user': user,
-                'verification_link': verification_link,
-            })
-            send_mail(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+        send_mail(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+        # user_profile = Profile.objects.create(user=user,is_email_verified=False,user_type=user_type,email_token = token)
+        user_profile = Profile.objects.create(user=user,user_type=user_type)
+        user_profile.save()
+        return render(request, 'accounts/verification_request.html')
+    user_types = Profile.USER_TYPES
+    return render(request, 'accounts/signup.html', {'user_types': user_types})
 
-            return render(request, 'accounts/verification_request.html')
-    else:
-        form = SignupForm()
-    return render(request, 'accounts/signup.html', {'form': form})
 
 def verify_email_confirm(request, uidb64, token):
     try:
@@ -87,6 +117,11 @@ def verify_email_confirm(request, uidb64, token):
     if user is not None and default_token_generator.check_token(user, token):
         user.is_active = True
         user.save()
+
+        # user_Profile = Profile.objects.get(user=user)
+        # user_Profile.is_email_verified = True
+        # user_Profile.save()
+
         return render(request, 'accounts/verification_success.html')
     else:
         return render(request, 'accounts/verification_error.html')
@@ -94,22 +129,50 @@ def verify_email_confirm(request, uidb64, token):
 
 def login_view(request):
     if request.method == 'POST':
-        form = LoginForm(request, request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                context = {'username':username}
-                login(request, user)
-                return render(request,'accounts/home.html',context=context)
-    else:
-        form = LoginForm()
-    return render(request, 'accounts/login.html', {'form': form})
+        print("\nlogin me hu\n", )
+        # email = request.POST.get('email')
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user_type = request.POST.get('user_type')  # Get user type from form
+        print(f"\nlogin view me print kiya hai {username} {password} {user_type}\n")
+
+        if not User.objects.filter(username=username).exists():
+               messages.error(request, "Invalid username")
+               return redirect('login')
+        # Authenticate user based on username, password, and user type
+        # user = CustomUserBackend().authenticate(request, username=username, password=password, user_type=user_type)
+        user = authenticate(request, username=username, password=password)
+        print(user, f'user is None {user is None}')
+        if user is not None:
+            print("\nredirecting to login\n")
+            # context = {"message":f'you are user {username} with  {user_type} user type you will be having following access'}
+            # print(context['message'])
+            login(request, user)
+            print("\ngoing to home\n")
+            # return render(request,'accounts/home.html',context=context)
+            return redirect('home')
+        else:
+            print('else chala')
+            messages.error(request,'password or usertype is wrong')
+            # print('message ke baad')
+            return redirect('login')
+    user_types = Profile.USER_TYPES
+    return render(request, 'accounts/login.html', {'user_types': user_types})
+
+from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
+
+# Forgot Password View
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'accounts/forgot_password.html'
+
+# Reset Password View
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'accounts/reset_password.html'
 
 def forgot_password_view(request):
     if request.method == 'POST':
         form = ForgotPasswordForm(request.POST)
+        print("yahi forgot function hai")
         if form.is_valid():
             # here we can also add another logic for password reset
             pass
