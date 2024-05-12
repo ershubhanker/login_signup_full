@@ -1,5 +1,5 @@
 # # Create your views here.
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from .forms import ForgotPasswordForm
@@ -19,8 +19,10 @@ from django.contrib import messages
 
 @login_required(login_url='login')
 def home_page(request):
-    user = User.objects.get(username = request.user)
-    user_type = Profile.objects.get(user=user).user_type
+    print('\nchali\n')
+    user_type = User.objects.get(username = request.user).profile.user_type
+    # user_type = Profile.objects.get(user=user).user_type
+    
     context = {'message':f'{request.user} {user_type}'}
 
     return render(request,'accounts/home.html',context=context)
@@ -130,20 +132,25 @@ def verify_email_confirm(request, uidb64, token):
 def login_view(request):
     if request.method == 'POST':
         print("\nlogin me hu\n", )
-        # email = request.POST.get('email')
-        username = request.POST.get('username')
+        email = request.POST.get('email')
+        # username = request.POST.get('username')
         password = request.POST.get('password')
-        user_type = request.POST.get('user_type')  # Get user type from form
-        print(f"\nlogin view me print kiya hai {username} {password} {user_type}\n")
+        form_user_type = request.POST.get('user_type')  # Get user type from form
+        print(f"\nlogin view me print kiya hai {email} {password} {form_user_type}\n")
 
-        if not User.objects.filter(username=username).exists():
-               messages.error(request, "Invalid username")
+        if not User.objects.filter(email=email).exists():
+               messages.error(request, "Invalid Email")
                return redirect('login')
         # Authenticate user based on username, password, and user type
         # user = CustomUserBackend().authenticate(request, username=username, password=password, user_type=user_type)
+        
+        user = User.objects.get(email=email)
+        # username = User.objects.get(email=email).username
+        username = user.username
+        user_type = user.profile.user_type
         user = authenticate(request, username=username, password=password)
         print(user, f'user is None {user is None}')
-        if user is not None:
+        if user is not None and user_type == form_user_type:
             print("\nredirecting to login\n")
             # context = {"message":f'you are user {username} with  {user_type} user type you will be having following access'}
             # print(context['message'])
@@ -153,7 +160,8 @@ def login_view(request):
             return redirect('home')
         else:
             print('else chala')
-            messages.error(request,'password or usertype is wrong')
+            print(f'user is not None {user is not None} user_type == form_user_type  {user_type} == {form_user_type} {user_type == form_user_type}')
+            messages.error(request,'password or user_type is wrong')
             # print('message ke baad')
             return redirect('login')
     user_types = Profile.USER_TYPES
