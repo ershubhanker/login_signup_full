@@ -16,6 +16,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.urls import reverse
 from .models import CustomUser 
+from django.contrib import messages
 
 @login_required(login_url='login')
 def home_page(request):
@@ -71,38 +72,55 @@ def verify_email_request(request):
 
 def signup_view(request):
     if request.method == 'POST':
-        form = SignupForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False  # User is inactive until email is verified
-            user.save()
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        user_type = request.POST.get('user_type')
+        print(f'{username} {email} {password1} {password2} {user_type} ')
+        
+        user = CustomUser.objects.filter(username=username)
+        
+        if user.exists():
+            messages.error(request, "username already exist.")
+            return redirect('signup')
+        
+        if password1!=password2:
+            messages.error(request, "password dosent matches")
+            return redirect('signup')
+        
+        user = CustomUser.objects.create(
+               username=username,
+               email=email,
+               user_type = user_type
+        )
+        
+        user.set_password(password1)
+        user.is_active = False
+        user.save()
+     
 
-            user_type = form.cleaned_data.get('user_type')
-            user.user_type = user_type
-            user.save()
+        # Send verification email
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        print(f"while signup the token is {token}")
+        current_site = get_current_site(request)
 
-            # Send verification email
-            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            print(f"while signup the token is {token}")
-            current_site = get_current_site(request)
+        protocol = 'https' if request.is_secure() else 'http'  # Adjust protocol based on request
+        # protocol = 'http' if request.is_secure() else 'https'  # Adjust protocol based on request
+        domain = current_site.domain
+        verify_url = reverse('verify_email_confirm', kwargs={'uidb64': uidb64, 'token': token})
+        verification_link = f"{protocol}://{domain}{verify_url}"
+        mail_subject = 'Activate your account'
+        message = render_to_string('accounts/email_verification_email.html', {
+            'user': user,
+            'verification_link': verification_link,
+        })
+        send_mail(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
 
-            protocol = 'https' if request.is_secure() else 'http'  # Adjust protocol based on request
-            # protocol = 'http' if request.is_secure() else 'https'  # Adjust protocol based on request
-            domain = current_site.domain
-            verify_url = reverse('verify_email_confirm', kwargs={'uidb64': uidb64, 'token': token})
-            verification_link = f"{protocol}://{domain}{verify_url}"
-            mail_subject = 'Activate your account'
-            message = render_to_string('accounts/email_verification_email.html', {
-                'user': user,
-                'verification_link': verification_link,
-            })
-            send_mail(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
-
-            return render(request, 'accounts/verification_request.html')
-    else:
-        form = SignupForm()
-    return render(request, 'accounts/signup.html', {'form': form})
+        return render(request, 'accounts/verification_request.html')
+    user_types = CustomUser.USER_TYPES
+    return render(request, 'accounts/signup.html', {'user_types': user_types})
 
 def verify_email_confirm(request, uidb64, token):
     try:
@@ -126,14 +144,15 @@ from .backends import CustomUserBackend
 
 def login_view(request):
     if request.method == 'POST':
-        form = LoginForm(request.POST)
-        # print(request.POST)
         print("\nlogin me hu\n", )
-        # print("\nye line chali\n")
         email = request.POST.get('email')
         password = request.POST.get('password')
         user_type = request.POST.get('user_type')  # Get user type from form
         print(f"\nlogin view me print kiya hai {email} {password} {user_type}\n")
+
+        if not CustomUser.objects.filter(email=email).exists():
+               messages.error(request, "Invalid username")
+               return redirect('login')
         # Authenticate user based on username, password, and user type
         # user = CustomUserBackend().authenticate(request, username=username, password=password, user_type=user_type)
         user = CustomUserBackend().authenticate(request, email=email, password=password, user_type=user_type)
@@ -146,10 +165,13 @@ def login_view(request):
             print("\ngoing to home\n")
             # return render(request,'accounts/home.html',context=context)
             return redirect('home')
-    else:
-        print("\n\ninvalid\n\n")
-        form = LoginForm()
-    return render(request, 'accounts/login.html', {'form': form})
+        else:
+            print('else chala')
+            messages.error(request,'password or usertype is wrong')
+            # print('message ke baad')
+            return redirect('login')
+    user_types = CustomUser.USER_TYPES
+    return render(request, 'accounts/login.html', {'user_types': user_types})
 
 
 def forgot_password_view(request):
