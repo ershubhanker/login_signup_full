@@ -130,17 +130,17 @@ def login_view(request):
         # print(request.POST)
         print("\nlogin me hu\n", )
         # print("\nye line chali\n")
-        username = request.POST.get('username')
+        email = request.POST.get('email')
         password = request.POST.get('password')
         user_type = request.POST.get('user_type')  # Get user type from form
-        print(f"\nlogin view me print kiya hai {username} {password} {user_type}\n")
+        print(f"\nlogin view me print kiya hai {email} {password} {user_type}\n")
         # Authenticate user based on username, password, and user type
         # user = CustomUserBackend().authenticate(request, username=username, password=password, user_type=user_type)
-        user = CustomUserBackend().authenticate(request, username=username, password=password, user_type=user_type)
+        user = CustomUserBackend().authenticate(request, email=email, password=password, user_type=user_type)
         print(user, f'user is None {user is None}')
         if user is not None:
             print("\nredirecting to login\n")
-            context = {"message":f'you are user {username} with  {user_type} user type you will be having following access'}
+            # context = {"message":f'you are user {username} with  {user_type} user type you will be having following access'}
             # print(context['message'])
             login(request, user)
             print("\ngoing to home\n")

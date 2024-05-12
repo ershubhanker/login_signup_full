@@ -19,11 +19,13 @@ class SignupForm(UserCreationForm):
         fields = ('username', 'email', 'password1', 'password2', 'user_type')
 
 class LoginForm(AuthenticationForm):
+    # user_name = forms.
+    email = forms.EmailField(max_length=200, help_text='Required')
     user_type = forms.ChoiceField(choices=CustomUser.USER_TYPES)
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'password', 'user_type')
+        fields = ('email', 'password', 'user_type')
 
 
 class ForgotPasswordForm(PasswordResetForm):

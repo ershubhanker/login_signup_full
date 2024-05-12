@@ -13,8 +13,8 @@ from django.utils.translation import gettext as _
 class CustomUser(AbstractUser):
     USER_TYPES = [
         ('employee', 'Employee'),
-        ('hr', 'HR'),
-        ('custom_admin', 'Custom Admin'),
+        ('hr', 'HR')
+        # ('custom_admin', 'Custom Admin'),
     ]
     user_type = models.CharField(max_length=20, choices=USER_TYPES)
     

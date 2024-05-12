@@ -9,9 +9,9 @@ from django.contrib.auth import get_user_model
 
 
 class CustomUserBackend(ModelBackend):
-    def authenticate(self, request, username=None, password=None, **kwargs):
+    def authenticate(self, request, email=None, password=None, **kwargs):
         try:
-            user = CustomUser.objects.get(username=username)
+            user = CustomUser.objects.get(email=email)
             # print(f'''\n\nuser = {user} password matches {user.check_password(password)} type also user type is {user.user_type} and last request.POST.get('user_type') {request.POST.get('user_type')} kwargs  {kwargs['user_type']}\n\n ''')
             # print(f'''\n\nuser = {user} password matches {user.check_password(password)} type also user type is {user.user_type} and last request.POST.get('user_type') {request.POST.get('user_type')} ''')
             print(f'''\n\n user.user type is {user.user_type} and request.POST.get('user_type') {request.POST.get('user_type')}, condition = {str(user.user_type) == str(request.POST.get('user_type'))} ''')
