@@ -16,6 +16,24 @@ from django.utils.http import urlsafe_base64_encode
 from django.urls import reverse
 from .models import Profile
 from django.contrib import messages
+from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
+from rest_framework_simplejwt.tokens import RefreshToken
+# from rest_framework_simplejwt.authentication import JWTTokenUser
+from django.http import JsonResponse
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework import status
+
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def protected_view(request):
+    print(request.user.profile.user_type,request.user)
+    return JsonResponse({"message": "You have accessed the protected view!"})
+
 
 @login_required(login_url='login')
 def home_page(request):
@@ -128,6 +146,7 @@ def verify_email_confirm(request, uidb64, token):
     else:
         return render(request, 'accounts/verification_error.html')
 
+from rest_framework_simplejwt.tokens import TokenUser
 
 def login_view(request):
     if request.method == 'POST':
@@ -141,33 +160,83 @@ def login_view(request):
         if not User.objects.filter(email=email).exists():
                messages.error(request, "Invalid Email")
                return redirect('login')
-        # Authenticate user based on username, password, and user type
-        # user = CustomUserBackend().authenticate(request, username=username, password=password, user_type=user_type)
         
         user = User.objects.get(email=email)
-        # username = User.objects.get(email=email).username
         username = user.username
         user_type = user.profile.user_type
         user = authenticate(request, username=username, password=password)
         print(user, f'user is None {user is None}')
+        
         if user is not None and user_type == form_user_type:
-            print("\nredirecting to login\n")
-            # context = {"message":f'you are user {username} with  {user_type} user type you will be having following access'}
-            # print(context['message'])
             login(request, user)
-            print("\ngoing to home\n")
-            # return render(request,'accounts/home.html',context=context)
-            return redirect('home')
+            # return redirect('home')
+
+            refresh = RefreshToken.for_user(user)
+            token = str(refresh.access_token)
+
+            # Additional context to return in response
+            user_data = TokenUser(user).data  # Corrected usage here
+            response_data = {
+                'token': token,
+                'user': user_data
+            }
+            return JsonResponse(response_data, status=status.HTTP_200_OK)
         else:
             print('else chala')
             print(f'user is not None {user is not None} user_type == form_user_type  {user_type} == {form_user_type} {user_type == form_user_type}')
             messages.error(request,'password or user_type is wrong')
-            # print('message ke baad')
             return redirect('login')
     user_types = Profile.USER_TYPES
     return render(request, 'accounts/login.html', {'user_types': user_types})
 
-from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
+# def login_view(request):
+#     if request.method == 'POST':
+#         print("\nlogin me hu\n", )
+#         email = request.POST.get('email')
+#         # username = request.POST.get('username')
+#         password = request.POST.get('password')
+#         form_user_type = request.POST.get('user_type')  # Get user type from form
+#         print(f"\nlogin view me print kiya hai {email} {password} {form_user_type}\n")
+
+#         if not User.objects.filter(email=email).exists():
+#                messages.error(request, "Invalid Email")
+#                return redirect('login')
+#         # Authenticate user based on username, password, and user type
+#         # user = CustomUserBackend().authenticate(request, username=username, password=password, user_type=user_type)
+        
+#         user = User.objects.get(email=email)
+#         # username = User.objects.get(email=email).username
+#         username = user.username
+#         user_type = user.profile.user_type
+#         user = authenticate(request, username=username, password=password)
+#         print(user, f'user is None {user is None}')
+#         if user is not None and user_type == form_user_type:
+#             login(request, user)
+#             refresh = RefreshToken.for_user(user)
+#             token = str(refresh.access_token)
+
+#             # Additional context to return in response
+#             user_data = JWTTokenUser(user).data
+#             response_data = {
+#                 'token': token,
+#                 'user': user_data
+#             }
+#             return JsonResponse(response_data, status=status.HTTP_200_OK)
+#             # print("\nredirecting to login\n")
+#             # # context = {"message":f'you are user {username} with  {user_type} user type you will be having following access'}
+#             # # print(context['message'])
+#             # login(request, user)
+#             # print("\ngoing to home\n")
+#             # # return render(request,'accounts/home.html',context=context)
+#             # return redirect('home')
+#         else:
+#             print('else chala')
+#             print(f'user is not None {user is not None} user_type == form_user_type  {user_type} == {form_user_type} {user_type == form_user_type}')
+#             messages.error(request,'password or user_type is wrong')
+#             # print('message ke baad')
+#             return redirect('login')
+#     user_types = Profile.USER_TYPES
+#     return render(request, 'accounts/login.html', {'user_types': user_types})
 
 # Forgot Password View
 class CustomPasswordResetView(PasswordResetView):

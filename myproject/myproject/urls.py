@@ -15,7 +15,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
@@ -31,6 +30,8 @@ from accounts.views import home_page
 # from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 # from accounts.views import CustomPasswordResetView
 from accounts.views import CustomPasswordResetView, CustomPasswordResetConfirmView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView  # Import TokenRefreshView
+from django.http import JsonResponse
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -44,4 +45,6 @@ urlpatterns = [
     path('',home_page,name='home'),
     path('forgot-password/', CustomPasswordResetView.as_view(), name='forgot_password'),
     path('reset-password/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

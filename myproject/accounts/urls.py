@@ -1,5 +1,8 @@
 from django.urls import path
 from . import views
+from .views import protected_view
+from django.http import JsonResponse
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView  # Import TokenRefreshView
 
 urlpatterns = [
     # path('accounts/', include('accounts.urls')),
@@ -7,4 +10,6 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     # path('forgot_password/', views.forgot_password_view, name='forgot_password')
+    path('protected/', protected_view, name='protected_view')
+
 ]
