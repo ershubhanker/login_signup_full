@@ -25,6 +25,27 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import TokenUser
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+class UserDataAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Access authenticated user's data from request.user
+        username = request.user.username
+        email = request.user.email
+        image = request.data.get('image')  # Assuming image is sent in request data
+
+        # Your logic to handle the user's data (save to database, process, etc.)
+
+        return Response({'message': 'Data received successfully'}, status=status.HTTP_200_OK)
+
 
 
 @api_view(['GET'])
@@ -146,48 +167,109 @@ def verify_email_confirm(request, uidb64, token):
     else:
         return render(request, 'accounts/verification_error.html')
 
-from rest_framework_simplejwt.tokens import TokenUser
+
 
 def login_view(request):
     if request.method == 'POST':
-        print("\nlogin me hu\n", )
         email = request.POST.get('email')
-        # username = request.POST.get('username')
         password = request.POST.get('password')
-        form_user_type = request.POST.get('user_type')  # Get user type from form
-        print(f"\nlogin view me print kiya hai {email} {password} {form_user_type}\n")
+        form_user_type = request.POST.get('user_type')
+
+        if email is None:
+            messages.error(request, "Email is required")
+            return redirect('login')
 
         if not User.objects.filter(email=email).exists():
-               messages.error(request, "Invalid Email")
-               return redirect('login')
-        
-        user = User.objects.get(email=email)
+            messages.error(request, "Invalid Email")
+            return redirect('login')
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            messages.error(request, "User not found")
+            return redirect('login')
+
         username = user.username
         user_type = user.profile.user_type
         user = authenticate(request, username=username, password=password)
-        print(user, f'user is None {user is None}')
-        
+
         if user is not None and user_type == form_user_type:
             login(request, user)
             # return redirect('home')
 
+            # Generate refresh token
             refresh = RefreshToken.for_user(user)
             token = str(refresh.access_token)
 
-            # Additional context to return in response
-            user_data = TokenUser(user).data  # Corrected usage here
+            # Serialize token data
+            token_data = {'access_token': token}
+
             response_data = {
-                'token': token,
-                'user': user_data
+                'token': token_data,
+                'user': {'username': user.username}  # You can include other user data here if needed
             }
             return JsonResponse(response_data, status=status.HTTP_200_OK)
         else:
-            print('else chala')
-            print(f'user is not None {user is not None} user_type == form_user_type  {user_type} == {form_user_type} {user_type == form_user_type}')
-            messages.error(request,'password or user_type is wrong')
+            messages.error(request, 'Password or user type is wrong')
             return redirect('login')
+
     user_types = Profile.USER_TYPES
     return render(request, 'accounts/login.html', {'user_types': user_types})
+
+# def login_view(request):
+#     if request.method == 'POST':
+#         print("\nlogin me hu\n", )
+#         email = request.POST.get('email')
+#         # username = request.POST.get('username')
+#         password = request.POST.get('password')
+#         form_user_type = request.POST.get('user_type')  # Get user type from form
+#         if email is None:
+#             messages.error(request, "Email is required")
+#             return redirect('login')
+
+#         print(f"\nlogin view me print kiya hai {email} {password} {form_user_type}\n")
+
+#         if not User.objects.filter(email=email).exists():
+#                messages.error(request, "Invalid Email")
+#                return redirect('login')
+        
+#         # user = User.objects.get(email=email)
+#         print(f"Email: {email}")
+#         try:
+#             user = User.objects.get(email=email)
+#             print(f"Retrieved user: {user}")
+#         except User.DoesNotExist:
+#             print("User not found")
+#             return redirect('login')
+
+#         username = user.username
+#         user_type = user.profile.user_type
+#         user = authenticate(request, username=username, password=password)
+#         print(user, f'user is None {user is None}')
+        
+#         if user is not None and user_type == form_user_type:
+#             login(request, user)
+#             # redirect('home')
+
+#             refresh = RefreshToken.for_user(user)
+#             token = str(refresh.access_token)
+
+#             # Additional context to return in response
+#             user_data = TokenUser(user).data  # Corrected usage here
+#             response_data = {
+#                 'token': token,
+#                 'user': user_data
+#             }
+#             return JsonResponse(response_data, status=status.HTTP_200_OK)
+#         else:
+#             print('else chala')
+#             print(f'user is not None {user is not None} user_type == form_user_type  {user_type} == {form_user_type} {user_type == form_user_type}')
+#             messages.error(request,'password or user_type is wrong')
+#             return redirect('login')
+#     user_types = Profile.USER_TYPES
+#     return render(request, 'accounts/login.html', {'user_types': user_types})
+
+
 
 # def login_view(request):
 #     if request.method == 'POST':
@@ -246,16 +328,16 @@ class CustomPasswordResetView(PasswordResetView):
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     template_name = 'accounts/reset_password.html'
 
-def forgot_password_view(request):
-    if request.method == 'POST':
-        form = ForgotPasswordForm(request.POST)
-        print("yahi forgot function hai")
-        if form.is_valid():
-            # here we can also add another logic for password reset
-            pass
-    else:
-        form = ForgotPasswordForm()
-    return render(request, 'accounts/forgot_password.html', {'form': form})
+# def forgot_password_view(request):
+#     if request.method == 'POST':
+#         form = ForgotPasswordForm(request.POST)
+#         print("yahi forgot function hai")
+#         if form.is_valid():
+#             # here we can also add another logic for password reset
+#             pass
+#     else:
+#         form = ForgotPasswordForm()
+#     return render(request, 'accounts/forgot_password.html', {'form': form})
 
 def logout_view(request):
     logout(request)

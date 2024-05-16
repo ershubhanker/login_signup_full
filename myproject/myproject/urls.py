@@ -32,6 +32,7 @@ from accounts.views import home_page
 from accounts.views import CustomPasswordResetView, CustomPasswordResetConfirmView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView  # Import TokenRefreshView
 from django.http import JsonResponse
+from accounts.views import UserDataAPIView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -47,4 +48,5 @@ urlpatterns = [
     path('reset-password/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/user-data/', UserDataAPIView.as_view(), name='user_data_api')
 ]

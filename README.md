@@ -34,6 +34,11 @@ if on linux/mac
 . venv/bin/activate
 ```
 
+install all requirements
+```
+pip install -r requirements.txt
+```
+
 run the manage.py file
 ```
 python myproject/manage.py runserver
